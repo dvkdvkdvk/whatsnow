@@ -116,31 +116,16 @@ export function ProjectSidebar({
   const [editClientName, setEditClientName] = React.useState('')
   const [scrapeUrl, setScrapeUrl] = React.useState('')
   const [isScrapingCss, setIsScrapingCss] = React.useState(false)
-  const [isCapturingScreenshot, setIsCapturingScreenshot] = React.useState(false)
   const [screenshotUrl, setScreenshotUrl] = React.useState('')
 
-  // Capture screenshot of client website for visual reference (optional)
-  const handleCaptureScreenshot = async () => {
-    if (!scrapeUrl.trim()) return
-    
-    setIsCapturingScreenshot(true)
-    try {
-      const response = await fetch('/api/screenshot', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: scrapeUrl }),
-      })
-      
-      const data = await response.json()
-      
-      if (data.screenshotUrl) {
-        setScreenshotUrl(data.screenshotUrl)
-        if (activeProject) {
-          onUpdateProject(activeProject.id, { 
-            screenshotUrl: data.screenshotUrl,
-            clientUrl: scrapeUrl 
-          })
-        }
+  const handleOpenSettings = () => {
+    if (activeProject?.screenshotUrl) {
+      setScreenshotUrl(activeProject.screenshotUrl)
+    } else {
+      setScreenshotUrl('')
+    }
+    setIsSettingsOpen(true)
+  }
         toast.success('Screenshot captured!', {
           description: 'Visual reference added to project'
         })
@@ -611,101 +596,75 @@ export function ProjectSidebar({
                 <div className="rounded-xl border border-border p-5 bg-muted/50">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15">
-                      <Globe className="h-5 w-5 text-primary" />
+                      <FileCode className="h-5 w-5 text-primary" />
                     </div>
                     <div>
                       <h3 className="text-sm font-semibold">Visual Reference</h3>
-                      <p className="text-xs text-muted-foreground">Enter client website URL for AI to match style</p>
+                      <p className="text-xs text-muted-foreground">Upload a screenshot of the client website</p>
                     </div>
                   </div>
-                  
-                  {/* URL Import + Screenshot */}
-                  <div className="flex gap-2 mb-3">
-                    <Input
-                      type="url"
-                      placeholder="https://client-website.com"
-                      value={scrapeUrl}
-                      onChange={(e) => setScrapeUrl(e.target.value)}
-                      className="flex-1"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && scrapeUrl.trim() && !isScrapingCss) {
-                          handleScrapeCss()
+
+                  {/* Screenshot Upload */}
+                  <label className="flex items-center justify-center gap-2 p-4 border-2 border-dashed border-border rounded-lg hover:border-primary/50 hover:bg-muted/30 cursor-pointer transition-colors">
+                    <Upload className="h-5 w-5 text-muted-foreground" />
+                    <div className="text-center">
+                      <p className="text-sm font-medium text-foreground">Click to upload</p>
+                      <p className="text-xs text-muted-foreground">or drag and drop</p>
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0]
+                        if (!file) return
+                        
+                        try {
+                          const formData = new FormData()
+                          formData.append('file', file)
+                          
+                          const response = await fetch('/api/upload-screenshot', {
+                            method: 'POST',
+                            body: formData,
+                          })
+                          
+                          const data = await response.json()
+                          
+                          if (data.url) {
+                            setScreenshotUrl(data.url)
+                            if (activeProject) {
+                              onUpdateProject(activeProject.id, { 
+                                screenshotUrl: data.url 
+                              })
+                            }
+                            toast.success('Screenshot uploaded!', {
+                              description: 'AI will use this as visual reference for matching design style'
+                            })
+                          } else {
+                            toast.error('Upload failed', { description: data.error || 'Please try again' })
+                          }
+                        } catch (error) {
+                          console.error('Upload error:', error)
+                          toast.error('Upload failed', { description: 'Network error occurred' })
                         }
                       }}
                     />
-                    <Button
-                      size="sm"
-                      onClick={handleScrapeCss}
-                      disabled={!scrapeUrl.trim() || isScrapingCss || isCapturingScreenshot}
-                      variant="default"
-                    >
-                      {(isScrapingCss || isCapturingScreenshot) ? (
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      ) : (
-                        <Globe className="h-4 w-4 mr-2" />
-                      )}
-                      Import
-                    </Button>
-                  </div>
-                  
-                  {/* Screenshot Upload Option */}
-                  <div className="mt-3">
-                    <p className="text-xs text-muted-foreground mb-2">Or upload a screenshot of the client website:</p>
-                    <label className="flex items-center justify-center gap-2 p-3 border-2 border-dashed border-border rounded-lg hover:border-primary/50 hover:bg-muted/30 cursor-pointer transition-colors">
-                      <Upload className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm text-muted-foreground">Upload Screenshot</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={async (e) => {
-                          const file = e.target.files?.[0]
-                          if (!file) return
-                          
-                          try {
-                            const formData = new FormData()
-                            formData.append('file', file)
-                            
-                            const response = await fetch('/api/upload-screenshot', {
-                              method: 'POST',
-                              body: formData,
-                            })
-                            
-                            const data = await response.json()
-                            
-                            if (data.url) {
-                              setScreenshotUrl(data.url)
-                              if (activeProject) {
-                                onUpdateProject(activeProject.id, { 
-                                  screenshotUrl: data.url 
-                                })
-                              }
-                              toast.success('Screenshot uploaded!', {
-                                description: 'AI will use this as visual reference'
-                              })
-                            }
-                          } catch (error) {
-                            toast.error('Upload failed', { description: 'Please try again' })
-                          }
-                        }}
-                      />
-                    </label>
-                  </div>
+                  </label>
 
                   {/* Screenshot Preview */}
                   {(screenshotUrl || activeProject?.screenshotUrl) && (
-                    <div className="mt-3 rounded-lg border border-border overflow-hidden">
+                    <div className="mt-4 rounded-lg border border-border overflow-hidden">
                       <img 
                         src={screenshotUrl || activeProject?.screenshotUrl} 
                         alt="Client website screenshot"
-                        className="w-full h-32 object-cover object-top"
+                        className="w-full h-40 object-cover object-top"
                       />
-                      <div className="p-2 bg-muted/50 text-xs text-muted-foreground flex items-center justify-between">
-                        <span>Visual reference - AI will match this style</span>
+                      <div className="p-3 bg-muted/50 text-xs text-muted-foreground flex items-center justify-between">
+                        <span className="font-medium">Visual reference active</span>
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-5 px-2 text-xs hover:text-destructive"
+                          className="h-6 px-2 text-xs hover:text-destructive"
                           onClick={() => {
                             setScreenshotUrl('')
                             if (activeProject) {
@@ -713,7 +672,7 @@ export function ProjectSidebar({
                             }
                           }}
                         >
-                          <X className="h-3 w-3" />
+                          Remove
                         </Button>
                       </div>
                     </div>
