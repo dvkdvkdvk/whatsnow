@@ -362,7 +362,9 @@ export default function BrandDNAPage() {
             tokens: activeProject.designTokens,
             style,
             cssContent: activeProject.cssContent,
-            screenshotUrl: activeProject.screenshotUrl, // Visual reference for AI
+            // Pass visual references - use first from array or legacy screenshotUrl
+            screenshotUrl: activeProject.visualReferences?.[0]?.url || activeProject.screenshotUrl,
+            visualReferences: activeProject.visualReferences?.map(v => v.url) || [],
           }),
         })
         
