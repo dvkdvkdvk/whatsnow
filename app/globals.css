@@ -4,94 +4,81 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Maggie-inspired playful color palette */
-  --background: oklch(0.98 0.01 85);
-  --foreground: oklch(0.15 0.02 260);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.15 0.02 260);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.15 0.02 260);
-  
-  /* Vibrant green primary - like WhatsApp/Maggie */
-  --primary: oklch(0.55 0.2 145);
-  --primary-foreground: oklch(1 0 0);
-  
-  /* Soft cream/beige secondary */
-  --secondary: oklch(0.95 0.02 85);
-  --secondary-foreground: oklch(0.25 0.02 260);
-  
-  --muted: oklch(0.94 0.01 85);
-  --muted-foreground: oklch(0.45 0.01 260);
-  
-  /* Playful coral accent */
-  --accent: oklch(0.7 0.18 25);
-  --accent-foreground: oklch(1 0 0);
-  
-  --destructive: oklch(0.55 0.22 25);
-  --destructive-foreground: oklch(1 0 0);
-  
-  --border: oklch(0.88 0.02 85);
-  --input: oklch(0.96 0.01 85);
-  --ring: oklch(0.55 0.2 145);
-  
-  /* Fun chart colors */
-  --chart-1: oklch(0.55 0.2 145);
-  --chart-2: oklch(0.65 0.18 200);
-  --chart-3: oklch(0.7 0.18 25);
-  --chart-4: oklch(0.7 0.18 60);
-  --chart-5: oklch(0.6 0.2 320);
-  
-  --radius: 1rem;
-  
-  --sidebar: oklch(0.97 0.01 85);
-  --sidebar-foreground: oklch(0.15 0.02 260);
-  --sidebar-primary: oklch(0.55 0.2 145);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.92 0.03 85);
-  --sidebar-accent-foreground: oklch(0.25 0.02 260);
-  --sidebar-border: oklch(0.88 0.02 85);
-  --sidebar-ring: oklch(0.55 0.2 145);
+  /* OpenDXP Design System - Light Mode */
+  --background: #fafafa;
+  --foreground: #101011;
+  --card: #ffffff;
+  --card-foreground: #101011;
+  --popover: #ffffff;
+  --popover-foreground: #101011;
+  --primary: #c8d922;
+  --primary-foreground: #101011;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #101011;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --accent: #c8d922;
+  --accent-foreground: #101011;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #e4e4e7;
+  --input: #e4e4e7;
+  --ring: #c8d922;
+  --chart-1: #c8d922;
+  --chart-2: #101011;
+  --chart-3: #71717a;
+  --chart-4: #a3b318;
+  --chart-5: #84cc16;
+  --radius: 0.625rem;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #101011;
+  --sidebar-primary: #c8d922;
+  --sidebar-primary-foreground: #101011;
+  --sidebar-accent: #f4f4f5;
+  --sidebar-accent-foreground: #101011;
+  --sidebar-border: #e4e4e7;
+  --sidebar-ring: #c8d922;
 }
 
 .dark {
-  --background: oklch(0.12 0.01 260);
-  --foreground: oklch(0.95 0 0);
-  --card: oklch(0.16 0.01 260);
-  --card-foreground: oklch(0.95 0 0);
-  --popover: oklch(0.16 0.01 260);
-  --popover-foreground: oklch(0.95 0 0);
-  --primary: oklch(0.7 0.2 145);
-  --primary-foreground: oklch(0.12 0.01 260);
-  --secondary: oklch(0.22 0.01 260);
-  --secondary-foreground: oklch(0.95 0 0);
-  --muted: oklch(0.22 0.01 260);
-  --muted-foreground: oklch(0.65 0 0);
-  --accent: oklch(0.65 0.18 25);
-  --accent-foreground: oklch(0.95 0 0);
-  --destructive: oklch(0.55 0.2 25);
-  --destructive-foreground: oklch(0.95 0 0);
-  --border: oklch(0.25 0.01 260);
-  --input: oklch(0.22 0.01 260);
-  --ring: oklch(0.7 0.2 145);
-  --chart-1: oklch(0.7 0.2 145);
-  --chart-2: oklch(0.65 0.15 200);
-  --chart-3: oklch(0.65 0.18 25);
-  --chart-4: oklch(0.7 0.18 60);
-  --chart-5: oklch(0.6 0.2 320);
-  --sidebar: oklch(0.14 0.01 260);
-  --sidebar-foreground: oklch(0.95 0 0);
-  --sidebar-primary: oklch(0.7 0.2 145);
-  --sidebar-primary-foreground: oklch(0.12 0.01 260);
-  --sidebar-accent: oklch(0.22 0.01 260);
-  --sidebar-accent-foreground: oklch(0.95 0 0);
-  --sidebar-border: oklch(0.25 0.01 260);
-  --sidebar-ring: oklch(0.7 0.2 145);
+  /* OpenDXP Design System - Dark Mode */
+  --background: #09090b;
+  --foreground: #fafafa;
+  --card: #18181b;
+  --card-foreground: #fafafa;
+  --popover: #18181b;
+  --popover-foreground: #fafafa;
+  --primary: #E6FF2A;
+  --primary-foreground: #101011;
+  --secondary: #27272a;
+  --secondary-foreground: #fafafa;
+  --muted: #27272a;
+  --muted-foreground: #a1a1aa;
+  --accent: #E6FF2A;
+  --accent-foreground: #101011;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #27272a;
+  --input: #27272a;
+  --ring: #E6FF2A;
+  --chart-1: #E6FF2A;
+  --chart-2: #fafafa;
+  --chart-3: #a1a1aa;
+  --chart-4: #d4e815;
+  --chart-5: #a3e635;
+  --sidebar: #09090b;
+  --sidebar-foreground: #fafafa;
+  --sidebar-primary: #E6FF2A;
+  --sidebar-primary-foreground: #101011;
+  --sidebar-accent: #27272a;
+  --sidebar-accent-foreground: #fafafa;
+  --sidebar-border: #27272a;
+  --sidebar-ring: #E6FF2A;
 }
 
 @theme inline {
-  --font-sans: 'DM Sans', 'Geist', 'Geist Fallback', sans-serif;
-  --font-mono: 'Geist Mono', 'Geist Mono Fallback', monospace;
-  --font-display: 'DM Sans', sans-serif;
+  --font-sans: var(--font-inter), 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-mono), 'JetBrains Mono', ui-monospace, monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -137,41 +124,4 @@
   body {
     @apply bg-background text-foreground;
   }
-}
-
-/* Playful animations like Maggie App */
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-}
-
-@keyframes wiggle {
-  0%, 100% { transform: rotate(-3deg); }
-  50% { transform: rotate(3deg); }
-}
-
-@keyframes pop {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
-}
-
-.animate-float {
-  animation: float 3s ease-in-out infinite;
-}
-
-.animate-wiggle {
-  animation: wiggle 2s ease-in-out infinite;
-}
-
-.animate-pop {
-  animation: pop 0.3s ease-in-out;
-}
-
-/* Fun gradient text */
-.gradient-text {
-  background: linear-gradient(135deg, oklch(0.55 0.2 145), oklch(0.65 0.18 200));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
