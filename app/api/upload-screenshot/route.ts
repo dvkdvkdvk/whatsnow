@@ -14,9 +14,9 @@ export async function POST(request: Request) {
       return Response.json({ error: 'File must be an image' }, { status: 400 })
     }
 
-    // Limit file size (5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      return Response.json({ error: 'File too large (max 5MB)' }, { status: 400 })
+    // Limit file size (10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      return Response.json({ error: 'File too large (max 10MB)' }, { status: 400 })
     }
 
     // Get file extension

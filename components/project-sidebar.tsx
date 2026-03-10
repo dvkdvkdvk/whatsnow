@@ -206,47 +206,101 @@ export function ProjectSidebar({
                           <Settings className="h-4 w-4" />
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-                        <DialogHeader>
-                          <DialogTitle>Configure Project: {project.name}</DialogTitle>
+                      <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-0 gap-0">
+                        <DialogHeader className="px-6 pt-6 pb-4 border-b border-border">
+                          <DialogTitle className="text-xl">Configure Project</DialogTitle>
                         </DialogHeader>
 
-                        <div className="space-y-6">
-                          {/* Edit project info */}
-                          <div className="space-y-3">
-                            <h3 className="font-medium">Project Information</h3>
-                            <div>
-                              <label className="text-sm font-medium">Project Name</label>
-                              <Input
-                                value={editName}
-                                onChange={(e) => setEditName(e.target.value)}
-                                className="mt-1"
-                              />
+                        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
+                          {/* Project info card */}
+                          <div className="rounded-xl border border-border bg-muted/30 p-5 space-y-4">
+                            <h3 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground">Project Details</h3>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Project Name</label>
+                                <Input
+                                  value={editName}
+                                  onChange={(e) => setEditName(e.target.value)}
+                                  className="mt-2 bg-background"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Client Name</label>
+                                <Input
+                                  value={editClientName}
+                                  onChange={(e) => setEditClientName(e.target.value)}
+                                  className="mt-2 bg-background"
+                                />
+                              </div>
                             </div>
-                            <div>
-                              <label className="text-sm font-medium">Client Name</label>
-                              <Input
-                                value={editClientName}
-                                onChange={(e) => setEditClientName(e.target.value)}
-                                className="mt-1"
-                              />
-                            </div>
-                            <Button onClick={handleSaveEdit} className="w-full">
-                              Save Changes
-                            </Button>
                           </div>
 
-                          {/* Visual references */}
-                          <div className="space-y-3 border-t pt-4">
-                            <h3 className="font-medium">Visual References</h3>
-                            <p className="text-sm text-muted-foreground">
-                              Upload screenshots of the client website to help AI match design style
-                            </p>
+                          {/* Visual references section */}
+                          <div className="rounded-xl border border-border bg-muted/30 p-5 space-y-4">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <h3 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground">Visual References</h3>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  Upload screenshots to help AI match the design style
+                                </p>
+                              </div>
+                              <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
+                                {project.visualReferences?.length || 0} images
+                              </span>
+                            </div>
 
-                            {/* Upload button */}
-                            <label className="flex items-center justify-center gap-2 p-4 border-2 border-dashed border-border rounded-lg hover:border-primary/50 hover:bg-muted/30 cursor-pointer transition-colors">
-                              <Upload className="h-5 w-5 text-muted-foreground" />
-                              <span className="text-sm text-muted-foreground">Click to upload image</span>
+                            {/* Thumbnails grid */}
+                            {project.visualReferences && project.visualReferences.length > 0 && (
+                              <div className="grid grid-cols-3 gap-3">
+                                {project.visualReferences.map((visual) => (
+                                  <div key={visual.id} className="relative group aspect-video rounded-lg overflow-hidden border-2 border-border hover:border-primary/50 transition-colors">
+                                    <img
+                                      src={visual.url}
+                                      alt={visual.name}
+                                      className="w-full h-full object-cover"
+                                    />
+                                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                      <Button
+                                        size="sm"
+                                        variant="destructive"
+                                        onClick={() => removeVisual(project.id, visual.id)}
+                                      >
+                                        <Trash2 className="h-4 w-4 mr-1" />
+                                        Remove
+                                      </Button>
+                                    </div>
+                                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                      <p className="text-xs text-white truncate">{visual.name}</p>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* Upload dropzone */}
+                            <label 
+                              className={`flex flex-col items-center justify-center gap-3 p-8 border-2 border-dashed rounded-xl cursor-pointer transition-all ${
+                                isUploading 
+                                  ? 'border-primary/50 bg-primary/5' 
+                                  : 'border-border hover:border-primary/50 hover:bg-muted/50'
+                              }`}
+                            >
+                              {isUploading ? (
+                                <>
+                                  <div className="h-10 w-10 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                                  <span className="text-sm font-medium">Uploading...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                                    <Upload className="h-6 w-6 text-primary" />
+                                  </div>
+                                  <div className="text-center">
+                                    <span className="text-sm font-medium">Drop images here or click to upload</span>
+                                    <p className="text-xs text-muted-foreground mt-1">PNG, JPG up to 10MB</p>
+                                  </div>
+                                </>
+                              )}
                               <input
                                 ref={fileInputRef}
                                 type="file"
@@ -264,30 +318,17 @@ export function ProjectSidebar({
                                 }}
                               />
                             </label>
-
-                            {/* Visual references grid */}
-                            {project.visualReferences && project.visualReferences.length > 0 && (
-                              <div className="grid grid-cols-2 gap-2">
-                                {project.visualReferences.map((visual) => (
-                                  <div key={visual.id} className="relative group">
-                                    <img
-                                      src={visual.url}
-                                      alt={visual.name}
-                                      className="w-full h-24 object-cover rounded-lg border border-border"
-                                    />
-                                    <Button
-                                      size="sm"
-                                      variant="destructive"
-                                      className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                                      onClick={() => removeVisual(project.id, visual.id)}
-                                    >
-                                      <X className="h-3 w-3" />
-                                    </Button>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
                           </div>
+                        </div>
+
+                        {/* Fixed footer with save button */}
+                        <div className="px-6 py-4 border-t border-border bg-muted/30 flex justify-end gap-3">
+                          <Button variant="outline" onClick={() => setIsSettingsOpen(false)}>
+                            Cancel
+                          </Button>
+                          <Button onClick={handleSaveEdit}>
+                            Save Changes
+                          </Button>
                         </div>
                       </DialogContent>
                     </Dialog>
