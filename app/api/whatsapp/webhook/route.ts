@@ -38,14 +38,24 @@ export async function GET(request: Request) {
   const token = searchParams.get("hub.verify_token")
   const challenge = searchParams.get("hub.challenge")
 
-  console.log("[v0] Webhook verification attempt:", { mode, token: token?.substring(0, 10) + "..." })
+  console.log("[v0] Webhook verification attempt:")
+  console.log("[v0] Mode:", mode)
+  console.log("[v0] Token received:", token)
+  console.log("[v0] Token expected:", process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN)
+  console.log("[v0] Challenge:", challenge)
+  console.log("[v0] Tokens match:", token === process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN)
 
   if (mode === "subscribe" && token === process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN) {
-    console.log("[v0] Webhook verified successfully")
-    return new Response(challenge, { status: 200 })
+    console.log("[v0] ✅ Webhook verified successfully")
+    return new Response(challenge, { 
+      status: 200,
+      headers: { "Content-Type": "text/plain" }
+    })
   }
 
-  console.error("[v0] Webhook verification failed")
+  console.error("[v0] ❌ Webhook verification failed - token mismatch or invalid mode")
+  console.error("[v0] Expected mode: subscribe, got:", mode)
+  console.error("[v0] Token match:", token === process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN)
   return new Response("Forbidden", { status: 403 })
 }
 
