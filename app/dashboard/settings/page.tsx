@@ -80,69 +80,71 @@ export default function SettingsPage() {
           <CardDescription>Set up your Meta Business API credentials</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <FieldGroup>
-            <Field>
-              <FieldLabel htmlFor="webhook-url">Webhook URL</FieldLabel>
-              <div className="flex gap-2">
+          <form onSubmit={handleSaveSettings} className="space-y-4">
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="webhook-url">Webhook URL</FieldLabel>
+                <div className="flex gap-2">
+                  <Input
+                    id="webhook-url"
+                    value={webhookUrl}
+                    readOnly
+                    className="bg-muted cursor-not-allowed"
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => copyToClipboard(webhookUrl)}
+                  >
+                    {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Add this URL to your Meta App Webhooks configuration
+                </p>
+              </Field>
+            </FieldGroup>
+
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="verify-token">Webhook Verify Token</FieldLabel>
                 <Input
-                  id="webhook-url"
-                  value={webhookUrl}
-                  readOnly
-                  className="bg-muted cursor-not-allowed"
+                  id="verify-token"
+                  type="password"
+                  placeholder="Your verify token"
+                  value={verifyToken}
+                  onChange={(e) => setVerifyToken(e.target.value)}
                 />
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={() => copyToClipboard(webhookUrl)}
-                >
-                  {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                Add this URL to your Meta App Webhooks configuration
-              </p>
-            </Field>
-          </FieldGroup>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Use this token when setting up webhooks in Meta App
+                </p>
+              </Field>
+            </FieldGroup>
 
-          <FieldGroup>
-            <Field>
-              <FieldLabel htmlFor="verify-token">Webhook Verify Token</FieldLabel>
-              <Input
-                id="verify-token"
-                type="password"
-                placeholder="Your verify token"
-                value={verifyToken}
-                onChange={(e) => setVerifyToken(e.target.value)}
-              />
-              <p className="text-xs text-muted-foreground mt-2">
-                Use this token when setting up webhooks in Meta App
-              </p>
-            </Field>
-          </FieldGroup>
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="api-key">Access Token</FieldLabel>
+                <Input
+                  id="api-key"
+                  type="password"
+                  placeholder="Your Meta access token"
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground mt-2">
+                  Get this from your Meta App Settings
+                </p>
+              </Field>
+            </FieldGroup>
 
-          <FieldGroup>
-            <Field>
-              <FieldLabel htmlFor="api-key">Access Token</FieldLabel>
-              <Input
-                id="api-key"
-                type="password"
-                placeholder="Your Meta access token"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-              />
-              <p className="text-xs text-muted-foreground mt-2">
-                Get this from your Meta App Settings
-              </p>
-            </Field>
-          </FieldGroup>
-
-          <Button
-            onClick={handleSaveSettings}
-            disabled={isSaving}
-            className="w-full"
-          >
-            {isSaving ? "Saving..." : "Save Settings"}
-          </Button>
+            <Button
+              type="submit"
+              disabled={isSaving}
+              className="w-full"
+            >
+              {isSaving ? "Saving..." : "Save Settings"}
+            </Button>
+          </form>
         </CardContent>
       </Card>
 

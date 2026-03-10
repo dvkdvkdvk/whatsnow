@@ -33,30 +33,30 @@ const webhookSchema = z.object({
 
 // Verify webhook token
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url)
-  const mode = searchParams.get("hub.mode")
-  const token = searchParams.get("hub.verify_token")
-  const challenge = searchParams.get("hub.challenge")
+  try {
+    const { searchParams } = new URL(request.url)
+    const mode = searchParams.get("hub.mode")
+    const token = searchParams.get("hub.verify_token")
+    const challenge = searchParams.get("hub.challenge")
 
-  console.log("[v0] Webhook verification attempt:")
-  console.log("[v0] Mode:", mode)
-  console.log("[v0] Token received:", token)
-  console.log("[v0] Token expected:", process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN)
-  console.log("[v0] Challenge:", challenge)
-  console.log("[v0] Tokens match:", token === process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN)
+    const expectedToken = process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN
 
-  if (mode === "subscribe" && token === process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN) {
-    console.log("[v0] ✅ Webhook verified successfully")
-    return new Response(challenge, { 
-      status: 200,
-      headers: { "Content-Type": "text/plain" }
-    })
+    // Log for debugging
+    console.log("[v0] Webhook verification:")
+    console.log("[v0] mode =", mode, "token =", token, "expected =", expectedToken)
+
+    // Verify the token and mode
+    if (mode === "subscribe" && token === expectedToken) {
+      console.log("[v0] ✅ Webhook verified")
+      return new Response(challenge, { status: 200 })
+    }
+
+    console.log("[v0] ❌ Webhook verification failed")
+    return new Response("Forbidden", { status: 403 })
+  } catch (error) {
+    console.error("[v0] Webhook GET error:", error)
+    return new Response("Error", { status: 500 })
   }
-
-  console.error("[v0] ❌ Webhook verification failed - token mismatch or invalid mode")
-  console.error("[v0] Expected mode: subscribe, got:", mode)
-  console.error("[v0] Token match:", token === process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN)
-  return new Response("Forbidden", { status: 403 })
 }
 
 // Handle incoming messages
