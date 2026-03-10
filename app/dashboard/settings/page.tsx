@@ -23,13 +23,37 @@ export default function SettingsPage() {
 
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!verifyToken.trim() || !apiKey.trim()) {
+      toast.error("Please fill in all fields")
+      return
+    }
+
     setIsSaving(true)
 
     try {
-      // In a real app, you'd save these to the database
+      console.log("[v0] Saving settings:", { verifyToken: "***", apiKey: "***" })
+      
+      const response = await fetch("/api/settings/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          verifyToken,
+          apiKey,
+          webhookUrl,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to save settings")
+      }
+
+      const data = await response.json()
+      console.log("[v0] Settings saved successfully:", data)
       toast.success("Settings saved successfully!")
-    } catch {
-      toast.error("Failed to save settings")
+    } catch (error) {
+      console.error("[v0] Error saving settings:", error)
+      toast.error(error instanceof Error ? error.message : "Failed to save settings")
     } finally {
       setIsSaving(false)
     }
