@@ -11,9 +11,9 @@ export async function POST(request: NextRequest) {
       throw new Error("DATABASE_URL not configured")
     }
 
-    if (!verifyToken || !apiKey) {
+    if (!verifyToken) {
       return NextResponse.json(
-        { error: "Missing required fields" },
+        { error: "Verify token is required" },
         { status: 400 }
       )
     }
@@ -32,13 +32,26 @@ export async function POST(request: NextRequest) {
 
     console.log("[v0] Settings table ready")
 
-    // Save settings (upsert)
+    // Save each setting individually (upsert)
     await sql`
       INSERT INTO settings (key, value, updated_at) 
-      VALUES 
-        ('WEBHOOK_VERIFY_TOKEN', ${verifyToken}, NOW()),
-        ('WHATSAPP_API_KEY', ${apiKey}, NOW()),
-        ('WEBHOOK_URL', ${webhookUrl}, NOW())
+      VALUES ('WEBHOOK_VERIFY_TOKEN', ${verifyToken}, NOW())
+      ON CONFLICT (key) DO UPDATE 
+      SET value = EXCLUDED.value, updated_at = NOW()
+    `
+    
+    if (apiKey) {
+      await sql`
+        INSERT INTO settings (key, value, updated_at) 
+        VALUES ('WHATSAPP_API_KEY', ${apiKey}, NOW())
+        ON CONFLICT (key) DO UPDATE 
+        SET value = EXCLUDED.value, updated_at = NOW()
+      `
+    }
+    
+    await sql`
+      INSERT INTO settings (key, value, updated_at) 
+      VALUES ('WEBHOOK_URL', ${webhookUrl || ''}, NOW())
       ON CONFLICT (key) DO UPDATE 
       SET value = EXCLUDED.value, updated_at = NOW()
     `
