@@ -49,6 +49,43 @@ export default function ConnectionsPage() {
     },
   ])
   const [showAddDialog, setShowAddDialog] = useState(false)
+  const [newBusinessName, setNewBusinessName] = useState("")
+  const [newPhoneNumber, setNewPhoneNumber] = useState("")
+  const [isConnecting, setIsConnecting] = useState(false)
+
+  const handleConnect = async () => {
+    if (!newBusinessName.trim() || !newPhoneNumber.trim()) {
+      alert("Please fill in all fields")
+      return
+    }
+
+    setIsConnecting(true)
+    try {
+      console.log("[v0] Connecting:", { businessName: newBusinessName, phoneNumber: newPhoneNumber })
+      
+      // Create a new connection
+      const newConnection: Connection = {
+        id: `conn-${Date.now()}`,
+        phoneNumber: newPhoneNumber,
+        businessName: newBusinessName,
+        status: "pending",
+        automationEnabled: false,
+        messageCount: 0,
+        lastActive: "Just now",
+      }
+
+      setConnections([...connections, newConnection])
+      setNewBusinessName("")
+      setNewPhoneNumber("")
+      setShowAddDialog(false)
+      console.log("[v0] Connection added successfully")
+    } catch (error) {
+      console.error("[v0] Error connecting:", error)
+      alert("Failed to connect. Please try again.")
+    } finally {
+      setIsConnecting(false)
+    }
+  }
 
   const toggleAutomation = (id: string) => {
     setConnections(
@@ -171,6 +208,8 @@ export default function ConnectionsPage() {
                     id="business-name"
                     type="text"
                     placeholder="My Business"
+                    value={newBusinessName}
+                    onChange={(e) => setNewBusinessName(e.target.value)}
                   />
                 </Field>
                 <Field>
@@ -179,6 +218,8 @@ export default function ConnectionsPage() {
                     id="phone"
                     type="tel"
                     placeholder="+1 (555) 000-0000"
+                    value={newPhoneNumber}
+                    onChange={(e) => setNewPhoneNumber(e.target.value)}
                   />
                 </Field>
               </FieldGroup>
@@ -200,8 +241,12 @@ export default function ConnectionsPage() {
                 >
                   Cancel
                 </Button>
-                <Button className="flex-1">
-                  Connect
+                <Button 
+                  onClick={handleConnect}
+                  disabled={isConnecting}
+                  className="flex-1"
+                >
+                  {isConnecting ? "Connecting..." : "Connect"}
                 </Button>
               </div>
             </CardContent>
