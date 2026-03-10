@@ -38,10 +38,14 @@ export async function GET(request: Request) {
   const token = searchParams.get("hub.verify_token")
   const challenge = searchParams.get("hub.challenge")
 
-  if (mode === "subscribe" && token === process.env.WEBHOOK_VERIFY_TOKEN) {
+  console.log("[v0] Webhook verification attempt:", { mode, token: token?.substring(0, 10) + "..." })
+
+  if (mode === "subscribe" && token === process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN) {
+    console.log("[v0] Webhook verified successfully")
     return new Response(challenge, { status: 200 })
   }
 
+  console.error("[v0] Webhook verification failed")
   return new Response("Forbidden", { status: 403 })
 }
 
