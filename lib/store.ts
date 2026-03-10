@@ -51,6 +51,13 @@ export interface UploadedFile {
   content: string
 }
 
+export interface VisualReference {
+  id: string
+  url: string
+  name: string
+  uploadedAt: Date
+}
+
 export interface Project {
   id: string
   name: string
@@ -60,8 +67,9 @@ export interface Project {
   designTokens: DesignTokens
   cssContent?: string
   jsonContent?: string
-  screenshotUrl?: string  // Visual reference of client's website
+  screenshotUrl?: string  // Legacy - single visual reference
   clientUrl?: string       // Client's website URL
+  visualReferences: VisualReference[]  // Multiple visual references
   uploadedFiles: UploadedFile[]
   requests: ComponentRequest[]
 }
@@ -78,6 +86,7 @@ export function createProject(name: string, clientName: string): Project {
     createdAt: new Date(),
     updatedAt: new Date(),
     designTokens: {},
+    visualReferences: [],
     uploadedFiles: [],
     requests: [],
   }

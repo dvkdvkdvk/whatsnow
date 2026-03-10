@@ -1,453 +1,315 @@
 'use client'
 
-import * as React from 'react'
-import {
-  ChevronRight,
-  FolderPlus,
-  History,
-  MoreHorizontal,
-  Pencil,
-  Plus,
-  Settings,
-  Trash2,
-  FileCode,
-  Upload,
-  X,
-} from 'lucide-react'
-import { ThemeToggle } from '@/components/theme-toggle'
-import { toast } from 'sonner'
-import { cn } from '@/lib/utils'
+import React from 'react'
+import { Project } from '@/lib/store'
 import { Button } from '@/components/ui/button'
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubItem,
-  SidebarProvider,
-  SidebarRail,
-} from '@/components/ui/sidebar'
-import type { Project, ComponentRequest, DesignTokens } from '@/lib/store'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Plus, Settings, Trash2, Upload, X } from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
 
 interface ProjectSidebarProps {
   projects: Project[]
   activeProject: Project | null
-  activeRequest: ComponentRequest | null
-  onSelectProject: (project: Project) => void
-  onSelectRequest: (request: ComponentRequest) => void
   onCreateProject: (name: string, clientName: string) => void
-  onUpdateProject: (projectId: string, updates: Partial<Project>) => void
-  onDeleteProject: (projectId: string) => void
-  onDeleteRequest: (projectId: string, requestId: string) => void
-  onUpdateCSS: (css: string) => void
-  onClearTokens: () => void
-  onPasteCSS: (content: string, name: string) => void
-  children: React.ReactNode
+  onSelectProject: (project: Project) => void
+  onDeleteProject: (id: string) => void
+  onUpdateProject: (id: string, updates: Partial<Project>) => void
 }
 
 export function ProjectSidebar({
   projects,
   activeProject,
-  activeRequest,
-  onSelectProject,
-  onSelectRequest,
   onCreateProject,
-  onUpdateProject,
+  onSelectProject,
   onDeleteProject,
-  onDeleteRequest,
-  onUpdateCSS,
-  onClearTokens,
-  onPasteCSS,
-  children,
+  onUpdateProject,
 }: ProjectSidebarProps) {
+  const { toast } = useToast()
   const [isCreateOpen, setIsCreateOpen] = React.useState(false)
   const [isSettingsOpen, setIsSettingsOpen] = React.useState(false)
-  const [isEditOpen, setIsEditOpen] = React.useState(false)
-  const [editingProject, setEditingProject] = React.useState<Project | null>(null)
   const [projectName, setProjectName] = React.useState('')
   const [clientName, setClientName] = React.useState('')
+  const [editingProject, setEditingProject] = React.useState<Project | null>(null)
   const [editName, setEditName] = React.useState('')
   const [editClientName, setEditClientName] = React.useState('')
-  const [screenshotUrl, setScreenshotUrl] = React.useState('')
-
-  const handleOpenSettings = () => {
-    if (activeProject?.screenshotUrl) {
-      setScreenshotUrl(activeProject.screenshotUrl)
-    } else {
-      setScreenshotUrl('')
-    }
-    setIsSettingsOpen(true)
-  }
+  const [isUploading, setIsUploading] = React.useState(false)
+  const fileInputRef = React.useRef<HTMLInputElement>(null)
 
   const handleCreateProject = () => {
-    if (projectName && clientName) {
+    if (projectName.trim() && clientName.trim()) {
       onCreateProject(projectName, clientName)
       setProjectName('')
       setClientName('')
       setIsCreateOpen(false)
+      toast.success('Project created')
     }
   }
 
-  const handleEditProject = (project: Project) => {
-    setEditingProject(project)
-    setEditName(project.name)
-    setEditClientName(project.clientName)
-    setIsEditOpen(true)
-  }
-
   const handleSaveEdit = () => {
-    if (editingProject && editName && editClientName) {
+    if (editingProject && editName.trim() && editClientName.trim()) {
       onUpdateProject(editingProject.id, {
         name: editName,
         clientName: editClientName,
       })
-      setIsEditOpen(false)
+      setIsSettingsOpen(false)
       setEditingProject(null)
+      toast.success('Project updated')
     }
   }
 
-  const tokensToCSS = (tokens: DesignTokens): string => {
-    let css = ':root {\n'
-    if (tokens.colors) {
-      Object.entries(tokens.colors).forEach(([key, value]) => {
-        css += `  --${key}: ${value};\n`
-      })
+  const handleUploadVisual = async (file: File) => {
+    if (!activeProject) {
+      toast.error('Select a project first')
+      return
     }
-    if (tokens.fonts) {
-      Object.entries(tokens.fonts).forEach(([key, value]) => {
-        css += `  --font-${key}: ${value};\n`
-      })
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file')
+      return
     }
-    css += '}\n'
-    return css
+
+    setIsUploading(true)
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const response = await fetch('/api/upload-screenshot', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error('Upload failed')
+      }
+
+      const data = await response.json()
+
+      if (data.url) {
+        const newVisuals = [...(activeProject.visualReferences || [])]
+        newVisuals.push({
+          id: Date.now().toString(),
+          url: data.url,
+          name: file.name,
+          uploadedAt: new Date(),
+        })
+
+        onUpdateProject(activeProject.id, {
+          visualReferences: newVisuals,
+        })
+
+        toast.success('Visual reference uploaded')
+      } else {
+        throw new Error(data.error || 'Upload failed')
+      }
+    } catch (error) {
+      console.error('Upload error:', error)
+      toast.error('Upload failed', {
+        description: 'Please try again',
+      })
+    } finally {
+      setIsUploading(false)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    }
+  }
+
+  const removeVisual = (projectId: string, visualId: string) => {
+    const project = projects.find(p => p.id === projectId)
+    if (project) {
+      const updated = project.visualReferences.filter(v => v.id !== visualId)
+      onUpdateProject(projectId, { visualReferences: updated })
+      toast.success('Visual removed')
+    }
   }
 
   return (
-    <SidebarProvider>
-      <Sidebar>
-        <SidebarHeader className="border-b">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                <FileCode className="h-4 w-4 text-primary" />
-              </div>
-              <h1 className="font-bold text-sm">BrandTool</h1>
-            </div>
-            <ThemeToggle />
-          </div>
-        </SidebarHeader>
-
-        <SidebarContent>
-          {/* Projects */}
-          <SidebarGroup>
-            <div className="flex items-center justify-between px-2 py-2">
-              <SidebarGroupLabel>Projects</SidebarGroupLabel>
-              <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-                <DialogTrigger asChild>
-                  <Button size="icon" variant="ghost" className="h-6 w-6">
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Create New Project</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="project-name">Project Name</Label>
-                      <Input
-                        id="project-name"
-                        placeholder="My Brand Project"
-                        value={projectName}
-                        onChange={(e) => setProjectName(e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="client-name">Client Name</Label>
-                      <Input
-                        id="client-name"
-                        placeholder="Client Name or Brand"
-                        value={clientName}
-                        onChange={(e) => setClientName(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button onClick={handleCreateProject} disabled={!projectName || !clientName}>
-                      Create Project
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </div>
-
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {projects.map((project) => (
-                  <SidebarMenuItem key={project.id}>
-                    <Collapsible
-                      defaultOpen={activeProject?.id === project.id}
-                      onOpenChange={() => onSelectProject(project)}
-                    >
-                      <CollapsibleTrigger asChild>
-                        <SidebarMenuButton
-                          isActive={activeProject?.id === project.id}
-                          className="cursor-pointer"
-                        >
-                          <FolderPlus className="h-4 w-4" />
-                          <span>{project.name}</span>
-                          <ChevronRight className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
-                        </SidebarMenuButton>
-                      </CollapsibleTrigger>
-
-                      <CollapsibleContent>
-                        <SidebarMenuSub>
-                          <SidebarMenuSubItem>
-                            <span className="text-xs text-muted-foreground">{project.clientName}</span>
-                          </SidebarMenuSubItem>
-
-                          {project.requests && project.requests.length > 0 && (
-                            <>
-                              <SidebarMenuSubItem>
-                                <span className="text-xs font-semibold">Components</span>
-                              </SidebarMenuSubItem>
-                              {project.requests.map((request) => (
-                                <SidebarMenuSubItem
-                                  key={request.id}
-                                  isActive={activeRequest?.id === request.id}
-                                  className="cursor-pointer"
-                                  onClick={() => onSelectRequest(request)}
-                                >
-                                  <History className="h-3 w-3" />
-                                  <span className="text-xs">{request.prompt.substring(0, 30)}...</span>
-                                </SidebarMenuSubItem>
-                              ))}
-                            </>
-                          )}
-
-                          <SidebarMenuSubItem>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="w-full justify-start h-auto px-0 py-1"
-                              onClick={handleOpenSettings}
-                            >
-                              <Settings className="h-3 w-3 mr-2" />
-                              <span className="text-xs">Settings</span>
-                            </Button>
-                          </SidebarMenuSubItem>
-
-                          <SidebarMenuSubItem>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="w-full justify-start h-auto px-0 py-1 text-destructive hover:text-destructive"
-                                  onClick={() => setEditingProject(project)}
-                                >
-                                  <Trash2 className="h-3 w-3 mr-2" />
-                                  <span className="text-xs">Delete</span>
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Delete Project?</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    This will delete "{project.name}" and all its components.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() => onDeleteProject(project.id)}
-                                    className="bg-destructive"
-                                  >
-                                    Delete
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </SidebarMenuSubItem>
-                        </SidebarMenuSub>
-                      </CollapsibleContent>
-                    </Collapsible>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </SidebarContent>
-
-        <SidebarFooter />
-        <SidebarRail />
-      </Sidebar>
-
-      {/* Settings Dialog */}
-      <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Project Settings - {activeProject?.name}</DialogTitle>
-            <DialogDescription>Upload a visual reference for AI generation</DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-6">
-            {/* Visual Reference Section */}
-            <div className="rounded-lg border border-border p-4 bg-muted/50">
-              <h3 className="font-semibold text-sm mb-4 flex items-center gap-2">
-                <Upload className="h-4 w-4" />
-                Visual Reference
-              </h3>
-
-              <label className="flex items-center justify-center gap-3 p-6 border-2 border-dashed border-border rounded-lg hover:border-primary/50 hover:bg-muted/30 cursor-pointer transition-colors">
-                <Upload className="h-5 w-5 text-muted-foreground" />
-                <div className="text-center">
-                  <p className="text-sm font-medium text-foreground">Click to upload</p>
-                  <p className="text-xs text-muted-foreground">PNG, JPG up to 5MB</p>
-                </div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={async (e) => {
-                    const file = e.target.files?.[0]
-                    if (!file) return
-                    
-                    try {
-                      const formData = new FormData()
-                      formData.append('file', file)
-                      
-                      const response = await fetch('/api/upload-screenshot', {
-                        method: 'POST',
-                        body: formData,
-                      })
-                      
-                      const data = await response.json()
-                      
-                      if (data.url) {
-                        setScreenshotUrl(data.url)
-                        if (activeProject) {
-                          onUpdateProject(activeProject.id, { screenshotUrl: data.url })
-                        }
-                        toast.success('Screenshot uploaded!', {
-                          description: 'AI will match this design style'
-                        })
-                      } else {
-                        toast.error('Upload failed', { description: data.error || 'Try again' })
-                      }
-                    } catch (error) {
-                      toast.error('Upload failed', { description: 'Network error' })
-                    }
-                  }}
+    <aside className="h-full w-80 border-r border-border bg-background flex flex-col">
+      {/* Header with create button */}
+      <div className="p-4 border-b border-border flex items-center justify-between">
+        <h2 className="text-lg font-semibold">Projects</h2>
+        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+          <DialogTrigger asChild>
+            <Button size="sm" variant="default">
+              <Plus className="h-4 w-4" />
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create New Project</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium">Project Name</label>
+                <Input
+                  placeholder="e.g., Q1 Campaign"
+                  value={projectName}
+                  onChange={(e) => setProjectName(e.target.value)}
+                  className="mt-1"
                 />
-              </label>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Client Name</label>
+                <Input
+                  placeholder="e.g., Acme Corp"
+                  value={clientName}
+                  onChange={(e) => setClientName(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              <Button onClick={handleCreateProject} className="w-full">
+                Create Project
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
 
-              {(screenshotUrl || activeProject?.screenshotUrl) && (
-                <div className="mt-4 rounded-lg border border-border overflow-hidden">
-                  <img
-                    src={screenshotUrl || activeProject?.screenshotUrl!}
-                    alt="Reference"
-                    className="w-full h-40 object-cover object-top"
-                  />
-                  <div className="p-2 bg-muted/50 flex items-center justify-between">
-                    <span className="text-xs font-medium">Reference active</span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 px-2 hover:text-destructive"
-                      onClick={() => {
-                        setScreenshotUrl('')
-                        if (activeProject) {
-                          onUpdateProject(activeProject.id, { screenshotUrl: '' })
-                        }
-                      }}
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </div>
+      {/* Projects list */}
+      <div className="flex-1 overflow-y-auto p-2 space-y-1">
+        {projects.length === 0 ? (
+          <div className="p-4 text-center text-sm text-muted-foreground">
+            No projects yet. Create one to get started.
+          </div>
+        ) : (
+          projects.map((project) => (
+            <div
+              key={project.id}
+              className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                activeProject?.id === project.id
+                  ? 'border-primary bg-primary/5'
+                  : 'border-border hover:border-primary/30'
+              }`}
+              onClick={() => onSelectProject(project)}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium truncate text-sm">{project.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">{project.clientName}</p>
                 </div>
-              )}
-            </div>
-          </div>
+                <div className="flex gap-1">
+                  {activeProject?.id === project.id && (
+                    <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+                      <DialogTrigger asChild>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setEditingProject(project)
+                            setEditName(project.name)
+                            setEditClientName(project.clientName)
+                          }}
+                        >
+                          <Settings className="h-4 w-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>Configure Project: {project.name}</DialogTitle>
+                        </DialogHeader>
 
-          <DialogFooter>
-            <Button onClick={() => setIsSettingsOpen(false)}>Done</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+                        <div className="space-y-6">
+                          {/* Edit project info */}
+                          <div className="space-y-3">
+                            <h3 className="font-medium">Project Information</h3>
+                            <div>
+                              <label className="text-sm font-medium">Project Name</label>
+                              <Input
+                                value={editName}
+                                onChange={(e) => setEditName(e.target.value)}
+                                className="mt-1"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium">Client Name</label>
+                              <Input
+                                value={editClientName}
+                                onChange={(e) => setEditClientName(e.target.value)}
+                                className="mt-1"
+                              />
+                            </div>
+                            <Button onClick={handleSaveEdit} className="w-full">
+                              Save Changes
+                            </Button>
+                          </div>
 
-      {/* Edit Dialog */}
-      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Project</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="edit-name">Project Name</Label>
-              <Input
-                id="edit-name"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="edit-client">Client Name</Label>
-              <Input
-                id="edit-client"
-                value={editClientName}
-                onChange={(e) => setEditClientName(e.target.value)}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button onClick={handleSaveEdit}>Save Changes</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+                          {/* Visual references */}
+                          <div className="space-y-3 border-t pt-4">
+                            <h3 className="font-medium">Visual References</h3>
+                            <p className="text-sm text-muted-foreground">
+                              Upload screenshots of the client website to help AI match design style
+                            </p>
 
-      <main className="flex-1">{children}</main>
-    </SidebarProvider>
+                            {/* Upload button */}
+                            <label className="flex items-center justify-center gap-2 p-4 border-2 border-dashed border-border rounded-lg hover:border-primary/50 hover:bg-muted/30 cursor-pointer transition-colors">
+                              <Upload className="h-5 w-5 text-muted-foreground" />
+                              <span className="text-sm text-muted-foreground">Click to upload image</span>
+                              <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                className="hidden"
+                                disabled={isUploading}
+                                onChange={(e) => {
+                                  const files = e.target.files
+                                  if (files) {
+                                    for (let i = 0; i < files.length; i++) {
+                                      handleUploadVisual(files[i])
+                                    }
+                                  }
+                                }}
+                              />
+                            </label>
+
+                            {/* Visual references grid */}
+                            {project.visualReferences && project.visualReferences.length > 0 && (
+                              <div className="grid grid-cols-2 gap-2">
+                                {project.visualReferences.map((visual) => (
+                                  <div key={visual.id} className="relative group">
+                                    <img
+                                      src={visual.url}
+                                      alt={visual.name}
+                                      className="w-full h-24 object-cover rounded-lg border border-border"
+                                    />
+                                    <Button
+                                      size="sm"
+                                      variant="destructive"
+                                      className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                      onClick={() => removeVisual(project.id, visual.id)}
+                                    >
+                                      <X className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-destructive hover:text-destructive"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onDeleteProject(project.id)
+                      toast.success('Project deleted')
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </aside>
   )
 }
