@@ -20,7 +20,7 @@ export default function SignIn() {
     setIsLoading(true)
 
     try {
-      const response = await fetch("/api/otp/request", {
+      const response = await fetch("/api/whatsapp/send-code", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phone }),
@@ -47,7 +47,7 @@ export default function SignIn() {
     setIsLoading(true)
 
     try {
-      const response = await fetch("/api/otp/verify", {
+      const response = await fetch("/api/whatsapp/verify-code", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phone, otp }),
