@@ -117,7 +117,7 @@ export function ProjectSidebar({
   const [isCapturingScreenshot, setIsCapturingScreenshot] = React.useState(false)
   const [screenshotUrl, setScreenshotUrl] = React.useState('')
 
-  // Capture a screenshot of the client's website for visual reference (optional)
+  // Capture screenshot of client website for visual reference (optional)
   const handleCaptureScreenshot = async () => {
     if (!scrapeUrl.trim()) return
     
