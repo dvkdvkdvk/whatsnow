@@ -24,8 +24,8 @@ export default function SettingsPage() {
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!verifyToken.trim() || !apiKey.trim()) {
-      toast.error("Please fill in all fields")
+    if (!verifyToken.trim()) {
+      toast.error("Please enter a Webhook Verify Token")
       return
     }
 
