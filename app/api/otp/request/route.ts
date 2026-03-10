@@ -49,9 +49,11 @@ export async function POST(request: NextRequest) {
 
     if (existing.length === 0) {
       console.log("[v0] Creating new user")
+      // Use phone number as placeholder email for WhatsApp-only signups
+      const placeholderEmail = `${phone.replace(/\+/g, '')}@whatsapp.local`
       await sql`
-        INSERT INTO profiles (phone_number, otp_code, otp_expires_at)
-        VALUES (${phone}, ${otp}, ${expiresAt})
+        INSERT INTO profiles (email, phone_number, otp_code, otp_expires_at)
+        VALUES (${placeholderEmail}, ${phone}, ${otp}, ${expiresAt})
       `
     } else {
       console.log("[v0] Updating existing user")
