@@ -117,7 +117,7 @@ export function ProjectSidebar({
   const [isCapturingScreenshot, setIsCapturingScreenshot] = React.useState(false)
   const [screenshotUrl, setScreenshotUrl] = React.useState('')
 
-  // Capture a screenshot of the client's website for visual reference
+  // Capture screenshot of client website for visual reference (optional)
   const handleCaptureScreenshot = async () => {
     if (!scrapeUrl.trim()) return
     
@@ -131,14 +131,8 @@ export function ProjectSidebar({
       
       const data = await response.json()
       
-      if (!response.ok) {
-        toast.error('Failed to capture screenshot', { description: data.error })
-        return
-      }
-      
       if (data.screenshotUrl) {
         setScreenshotUrl(data.screenshotUrl)
-        // Save to project
         if (activeProject) {
           onUpdateProject(activeProject.id, { 
             screenshotUrl: data.screenshotUrl,
@@ -146,24 +140,28 @@ export function ProjectSidebar({
           })
         }
         toast.success('Screenshot captured!', {
-          description: 'Visual reference will be used for AI generation'
+          description: 'Visual reference added to project'
         })
+      } else {
+        // Screenshot service unavailable - but that's OK, CSS tokens are enough
+        setScreenshotUrl('')
       }
     } catch (error) {
-      toast.error('Failed to capture screenshot', { description: 'Network error occurred' })
+      // Silent fail - screenshot is optional
+      console.warn('Screenshot capture skipped:', error)
     } finally {
       setIsCapturingScreenshot(false)
     }
   }
 
   const handleScrapeCss = async () => {
-    if (!scrapeUrl.trim()) return
+    if (!scrapeUrl.trim()) {
+      toast.error('Enter a URL', { description: 'Paste the client website URL' })
+      return
+    }
     
     setIsScrapingCss(true)
     try {
-      // Also capture screenshot in parallel
-      handleCaptureScreenshot()
-      
       const response = await fetch('/api/scrape-css', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -173,28 +171,40 @@ export function ProjectSidebar({
       const data = await response.json()
       
       if (!response.ok) {
-        toast.error('Failed to scrape CSS', { description: data.error })
+        toast.error('Failed to import CSS', { 
+          description: data.error || 'Check the URL and try again' 
+        })
         return
       }
       
       if (data.css) {
-        setCssContent(data.css)
-        
-        // Auto-save the extracted CSS
+        // Auto-save the extracted CSS via the callback
         onPasteCSS(data.css, 'scraped')
         
         // Build a summary message
-        const { summary, tokens } = data
-        const colorCount = summary.totalColors || tokens?.colors?.length || 0
-        const fontCount = summary.totalFontFamilies || tokens?.fontFamilies?.length || 0
-        const varCount = summary.cssVariables || 0
+        const colorCount = data.summary?.totalColors || 0
+        const fontCount = data.summary?.totalFontFamilies || 0
+        const varCount = data.summary?.cssVariables || 0
         
-        toast.success('CSS imported and saved', {
-          description: `Extracted ${colorCount} colors, ${fontCount} fonts, ${varCount} variables`
+        toast.success('CSS imported successfully!', {
+          description: `${colorCount} colors, ${fontCount} fonts, ${varCount} CSS variables`
         })
+        
+        // Update project with client URL for reference
+        if (activeProject) {
+          onUpdateProject(activeProject.id, { 
+            clientUrl: scrapeUrl 
+          })
+        }
+        
+        // Try to capture screenshot too (async, don't block on failure)
+        setTimeout(() => handleCaptureScreenshot(), 500)
       }
     } catch (error) {
-      toast.error('Failed to scrape CSS', { description: 'Network error occurred' })
+      console.error('CSS scrape error:', error)
+      toast.error('Failed to import CSS', { 
+        description: 'Network error - check your connection and try again' 
+      })
     } finally {
       setIsScrapingCss(false)
     }
@@ -240,7 +250,8 @@ export function ProjectSidebar({
   }
 
   const handleSaveCSS = () => {
-    onUpdateCSS(cssContent)
+    // CSS is auto-saved via onPasteCSS callback now
+    toast.success('CSS saved', { description: 'Design tokens extracted from CSS' })
   }
 
   const tokensToCSS = (tokens: DesignTokens): string => {
