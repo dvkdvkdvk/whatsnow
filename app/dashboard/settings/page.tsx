@@ -7,10 +7,8 @@ import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
 import { useState, useEffect } from "react"
 import { Copy, Check, Sparkles, ArrowUpRight } from "lucide-react"
-import { useAuth } from "@/components/auth-context"
 
 export default function SettingsPage() {
-  const { user } = useAuth()
   const [webhookUrl, setWebhookUrl] = useState("")
   const [apiKey, setApiKey] = useState("")
   const [verifyToken, setVerifyToken] = useState("")
@@ -70,17 +68,12 @@ export default function SettingsPage() {
   }
 
   const handleUpgradeClick = async () => {
-    if (!user?.id) {
-      toast.error("Please log in first")
-      return
-    }
-
     setIsUpgrading(true)
     try {
       const response = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user.id }),
+        body: JSON.stringify({}),
       })
 
       if (!response.ok) {
@@ -239,3 +232,6 @@ export default function SettingsPage() {
           </Button>
         </CardContent>
       </Card>
+    </div>
+  )
+}

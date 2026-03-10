@@ -2,7 +2,8 @@ import { NextResponse } from "next/server"
 
 export async function POST(request: Request) {
   try {
-    const { userId } = await request.json()
+    const body = await request.json().catch(() => ({}))
+    const userId = body.userId || `user_${Date.now()}`
 
     const apiKey = process.env.LEMON_SQUEEZY_API_KEY
     const storeId = process.env.LEMON_SQUEEZY_STORE_ID
