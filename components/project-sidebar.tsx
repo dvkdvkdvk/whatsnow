@@ -1,5 +1,6 @@
 'use client'
 
+// Project sidebar component for managing clients and visual references
 import * as React from 'react'
 import { Plus, Settings, Trash2, Upload, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
