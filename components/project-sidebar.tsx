@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { ChevronRight, FolderPlus, Plus, Settings, Trash2, Upload, X } from 'lucide-react'
+import { Plus, Settings, Trash2, Upload, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -86,12 +86,11 @@ export function ProjectSidebar({
         body: formData,
       })
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Upload failed')
-      }
-
       const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Upload failed')
+      }
 
       if (data.url) {
         const currentVisuals = activeProject.visualReferences || []
@@ -107,8 +106,6 @@ export function ProjectSidebar({
         })
 
         toast.success('Visual reference uploaded')
-      } else {
-        throw new Error(data.error || 'Upload failed')
       }
     } catch (error) {
       console.error('Upload error:', error)
@@ -125,12 +122,11 @@ export function ProjectSidebar({
 
   const removeVisual = (visualId: string) => {
     if (!activeProject) return
-    const updated = (activeProject.visualReferences || []).filter(v => v.id !== visualId)
+    const updated = (activeProject.visualReferences || []).filter((v) => v.id !== visualId)
     onUpdateProject(activeProject.id, { visualReferences: updated })
     toast.success('Visual removed')
   }
 
-  // Drag and drop handlers
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
@@ -185,11 +181,7 @@ export function ProjectSidebar({
               if (e.key === 'Enter') handleCreateProject()
             }}
           />
-          <Button
-            onClick={handleCreateProject}
-            size="sm"
-            className="w-full h-8 text-xs"
-          >
+          <Button onClick={handleCreateProject} size="sm" className="w-full h-8 text-xs">
             <Plus className="h-3 w-3 mr-1" />
             New Project
           </Button>
@@ -199,14 +191,11 @@ export function ProjectSidebar({
       {/* Projects list */}
       <div className="flex-1 overflow-y-auto">
         {projects.length === 0 ? (
-          <div className="p-4 text-center text-sm text-muted-foreground">
-            No projects yet
-          </div>
+          <div className="p-4 text-center text-sm text-muted-foreground">No projects yet</div>
         ) : (
           <div className="space-y-1 p-2">
             {projects.map((project) => (
               <div key={project.id}>
-                {/* Project header */}
                 <button
                   onClick={() => onSelectProject(project)}
                   className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -249,14 +238,13 @@ export function ProjectSidebar({
                   </div>
                 </button>
 
-                {/* Requests list - only show if project is active */}
                 {activeProject?.id === project.id && project.requests.length > 0 && (
-                  <div className="ml-4 space-y-1">
+                  <div className="ml-4 mt-1 space-y-1">
                     {project.requests.map((request) => (
                       <button
                         key={request.id}
                         onClick={() => onSelectRequest(request)}
-                        className={`w-full text-left px-2 py-1 rounded text-xs transition-colors ${
+                        className={`w-full text-left px-2 py-1 rounded text-xs transition-colors group ${
                           activeRequest?.id === request.id
                             ? 'bg-primary/20 text-primary'
                             : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
@@ -350,11 +338,7 @@ export function ProjectSidebar({
                       >
                         <img src={visual.url} alt={visual.name} className="w-full h-full object-cover" />
                         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => removeVisual(visual.id)}
-                          >
+                          <Button size="sm" variant="destructive" onClick={() => removeVisual(visual.id)}>
                             <Trash2 className="h-4 w-4 mr-1" />
                             Remove
                           </Button>
@@ -368,15 +352,16 @@ export function ProjectSidebar({
                 )}
 
                 {/* Upload dropzone */}
-                <label
+                <div
                   className={`flex flex-col items-center justify-center gap-3 p-8 border-2 border-dashed rounded-xl cursor-pointer transition-all ${
                     isDraggingOver
-                      ? 'border-primary/50 bg-primary/5'
+                      ? 'border-primary bg-primary/5'
                       : 'border-border hover:border-primary/50 hover:bg-muted/50'
                   }`}
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
+                  onClick={() => fileInputRef.current?.click()}
                 >
                   {isUploading ? (
                     <>
@@ -410,7 +395,7 @@ export function ProjectSidebar({
                       }
                     }}
                   />
-                </label>
+                </div>
               </div>
             </div>
 
